@@ -6,7 +6,7 @@ import geneticAlgorithms as ga
 import numpy as np
 from matplotlib import pyplot as plt
 
-f = lambda x,y: x**2+y**2
+f = lambda x,y: x*np.sin(y)+y*np.sin(x)
 
 numBits = 8
 numPossibleValues = 2**numBits
@@ -34,21 +34,21 @@ def update(i):
     offsetsPSO = [p for p in popPSO]
     sctPSO.set_offsets(list(zip(offsetsPSO)))
     
-    # popGA = next(gaGen)
-    # offsetsGA = []
-    # for chrom in popGA:
-    #     offsetsGA.append(decode(chrom))
-    # sctGA.set_offsets(list(zip(offsetsGA)))
+    popGA = next(gaGen)
+    offsetsGA = []
+    for chrom in popGA:
+        offsetsGA.append(decode(chrom))
+    sctGA.set_offsets(list(zip(offsetsGA)))
     
     # return sctPSO,
 
-gaGen = ga.optimize(costFunction, 2*numBits, 30, 0.2, 0.1, pairing='rank_weighting', crossover='double_point')
-psoGen = pso.gbest(lambda x: -f(*x), 30, 2, .3, .3, [-10,10], inertia=0.8)
+gaGen = ga.optimize(costFunction, 2*numBits, 30, 0.3, 0.1, pairing='rank_weighting', crossover='double_point')
+psoGen = pso.gbest(lambda x: -f(*x), 30, 2, 1, 1, [-10,10], inertia=0.6)
 
 x, y = np.meshgrid(xq, yq)
 fig, ax = plt.subplots()
 ax.pcolormesh(x, y, f(x, y))
-sctGA = ax.scatter([],[],color='y')
+sctGA = ax.scatter([],[],color='g')
 sctPSO = ax.scatter([],[],color='r')
 txtIt = fig.text(0.15,0.03,'')
 

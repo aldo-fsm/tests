@@ -22,8 +22,8 @@ def gbest(fitnessFunction, popSize, nVar, c1, c2, bounds, inertia=1):
                                     else bestPositions[i] for i in range(len(positions))])
             bestFitness = np.array([fitness[i] if fitness[i] > bestFitness[i]
                                     else bestFitness[i] for i in range(len(fitness))])
-        r1 = np.random.uniform(0,1,(popSize, 2))
-        r2 = np.random.uniform(0,1,(popSize, 2))
+        r1 = np.random.uniform(0,1,(popSize, nVar))
+        r2 = np.random.uniform(0,1,(popSize, nVar))
         velocities = inertia*velocities + c1*r1*(bestPositions-positions)+c2*r2*(gbest-positions)
         positions += velocities
         yield positions
