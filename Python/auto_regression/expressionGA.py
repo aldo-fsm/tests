@@ -10,6 +10,10 @@ def evolveExpr(popSize, numVar, initialTreeSize, selRate, mutRate):
     valuesPool = [None, pi, E]
     valuesPool.extend(symbols(['x'+str(i) for i in range(numVar)]))
     pop = [createExpr(initialTreeSize, funcPool, valuesPool) for _ in range(popSize)]
+    # 1) fitness
+    # 2) selection
+    # 3) crossover
+    # 4) mutation
     return pop
 
 def createExpr(maxSize, funcPool, valuesPool):
@@ -38,6 +42,7 @@ def randomBranch(node):
         node = choice(node.args)
         maxHeight -= 1
     return node
+
 def argRandomBranch(node):
     aux = np.arange(height(node)+1)+1
     prob = aux/np.sum(aux)
@@ -52,6 +57,14 @@ def argRandomBranch(node):
         maxHeight -= 1
     return indexList
 
+def getNode(expr, indexList):
+    if type(indexList) != deque:
+        indexList = deque(indexList)
+    node = expr
+    while indexList:
+        node = node.args[indexList.popleft()]
+    return node
+
 def setNode(expr, indexList, node):
     if type(indexList) != deque:
         indexList = deque(indexList)
@@ -62,6 +75,7 @@ def setNode(expr, indexList, node):
                         else args[i] for i in range(len(args))])
     else:
         return node
+
 def height(node):
     if node.args:
         return 1+max([height(n) for n in node.args])
@@ -81,4 +95,4 @@ print(e)
 print(srepr(e))
 # print(height(e))
 # print(argRandomBranch(e))
-print(setNode(e,[0],10))
+print(getNode(e,[1,1,0]))
