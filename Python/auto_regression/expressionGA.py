@@ -5,15 +5,60 @@ from collections import deque
 
 nextSymbolId = 0
 
-def evolveExpr(popSize, numVar, initialTreeSize, selRate, mutRate):
+def evolveExpr(fitnessFunction, popSize, numVar, initialTreeSize, selRate, mutRate):
     funcPool = [(Add, 2), (Mul, 2), (Pow, 2), (sin, 1), (cos, 1), (log, 1)]
-    valuesPool = [None, pi, E]
+    valuesPool = [None]#[None, pi, E]
     valuesPool.extend(symbols(['x'+str(i) for i in range(numVar)]))
+    
+    popKeepSize = round(selRate*popSize)
+    numPairs = np.ceil((popSize-popKeepSize)/2)
+    numMutation = np.ceil(mutRate*popSize)
     pop = [createExpr(initialTreeSize, funcPool, valuesPool) for _ in range(popSize)]
-    # 1) fitness
-    # 2) selection
-    # 3) crossover
-    # 4) mutation
+
+    generation = 0
+    while True:
+        fitness = np.array([fitnessFunction(expr) for expr in pop])
+        sortIndexes = np.argsort(fitness*-1)
+        pop = np.array(pop)[sortIndexes]
+        fitness = fitness[sortIndexes]
+        popKeep = pop[:popKeepSize]
+        print('Generation: {}'.format(generation))
+        for e, f in zip(pop, fitness):
+            print('{0} .............. {1}'.format(e, f))
+        parents1, parents2 = selectPairs(popKeep, fitness, numPairs)
+        children = [crossover(p1, p2) for p1, p2 in zip(parents1,parents2)]
+        pop = np.concatenate([popKeep, *children])[:popSize]
+        yield pop
+        pop = mutation(pop, numMutation, initialTreeSize, funcPool, valuesPool)
+        generation+=1
+
+def selectPairs(popKeep, fitness, numPairs):
+    popKeepSize = len(popKeep)
+    numPairs = int(numPairs)
+    ranks = list(range(popKeepSize))
+    ranksSum = np.sum(ranks)
+    prob = [(popKeepSize-i-1)/ranksSum for i in ranks]
+    cumProb = np.cumsum(prob)
+    random1 = np.random.rand(numPairs)
+    random2 = np.random.rand(numPairs)
+    p1 = [argfirst(lambda n : n > r, cumProb) for r in random1]
+    p2 = [argfirst(lambda n : n > r, cumProb) for r in random2]
+    for i in range(len(p1)):
+        if p1[i] == p2[i] :
+            p2[i] = np.random.choice(popKeepSize)
+    return (popKeep[p1], popKeep[p2])
+def crossover(p1, p2):
+    crossoverPoint1 = argRandomBranch(p1)
+    crossoverPoint2 = argRandomBranch(p2)
+    child1 = setNode(p1, crossoverPoint1, randomBranch(p2))
+    child2 = setNode(p2, crossoverPoint2, randomBranch(p1))
+    return child1, child2
+
+def mutation(pop, numMutations, maxSize, funcPool, valuesPool):
+    popSize = len(pop)
+    for i in np.random.choice(popSize-1, int(numMutations))+1:
+        mutationPoint = argRandomBranch(pop[i])
+        pop[i] = setNode(pop[i], mutationPoint, createExpr(maxSize, funcPool, valuesPool))
     return pop
 
 def createExpr(maxSize, funcPool, valuesPool):
@@ -96,3 +141,13 @@ print(srepr(e))
 # print(height(e))
 # print(argRandomBranch(e))
 print(getNode(e,[1,1,0]))
+
+#1ºteste - aproximar targetValue
+def testFitness(expr):
+    targetValue = 5
+    for a in expr.free_symbols:
+        expr = expr.subs(a,1)
+    return -(expr.evalf()-targetValue)**2
+ga = evolveExpr(testFitness, 30, 2, 3, 0.5, 0.1)
+for _ in range(20):
+    pop = next(ga)
