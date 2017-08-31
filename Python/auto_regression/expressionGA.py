@@ -22,7 +22,7 @@ def evolveExpr(fitnessFunction, popSize, numVar, initialTreeSize, selRate, mutRa
         pop = np.array(pop)[sortIndexes]
         fitness = fitness[sortIndexes]
         popKeep = pop[:popKeepSize]
-        print('Generation: {}'.format(generation))
+        print('\n------------- Generation: {} -------------'.format(generation))
         for e, f in zip(pop, fitness):
             print('{0} .............. {1}'.format(e, f))
         parents1, parents2 = selectPairs(popKeep, fitness, numPairs)
@@ -144,10 +144,13 @@ print(getNode(e,[1,1,0]))
 
 #1ºteste - aproximar targetValue
 def testFitness(expr):
-    targetValue = 5
+    targetValue = np.pi
     for a in expr.free_symbols:
         expr = expr.subs(a,1)
-    return -(expr.evalf()-targetValue)**2
-ga = evolveExpr(testFitness, 30, 2, 3, 0.5, 0.1)
-for _ in range(20):
+    try:
+        return np.float(-(expr.evalf()-targetValue)**2)
+    except:
+        return -np.inf
+ga = evolveExpr(testFitness, 30, 2, 3, 0.5, 0.2)
+for _ in range(200):
     pop = next(ga)

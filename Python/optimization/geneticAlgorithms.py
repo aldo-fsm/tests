@@ -50,7 +50,7 @@ def selectPairs(popKeep, costs, numberPairs, kind='rank_weighting', **kwargs):
         p2 = np.random.choice(popKeepSize, numberPairs)
     elif kind == 'cost_weighting':
         costs = (costs-costs[popKeepSize])[:popKeepSize]
-        costsSum = np.sum(costs)
+        costsSum = np.sum(costs[:popKeepSize])
         if costsSum == 0:
             return selectPairs(popKeep, costs, numberPairs, kind='random')
         prob = costs/costsSum
