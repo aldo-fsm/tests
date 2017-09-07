@@ -1,13 +1,20 @@
 import numpy as np
 
-def gbest(fitnessFunction, popSize, nVar, c1, c2, bounds, inertia=1):
+def gbest(fitnessFunction, popSize, nVar, c1, c2, initBounds, inertia=1):
     iteration = 0
-    positions = np.random.uniform(bounds[0], bounds[1], (popSize, nVar))
+    positions = np.random.uniform(initBounds[0], initBounds[1], (popSize, nVar))
     velocities = np.zeros([popSize, nVar])    
     while True:
         fitness = np.array([fitnessFunction(p) for p in positions])
         gbestIndex = np.argmax(fitness)
         gbest = positions[gbestIndex]
+
+        yield {
+            'positions':positions,
+            'velocities': velocities,
+            'gbestIndex': gbestIndex,
+            'fitness':fitness
+            }
 
         print('Iteration: {}'.format(iteration))
         print('gbest: {0} ( {1} )'.format(fitness[gbestIndex], gbest))
@@ -26,5 +33,4 @@ def gbest(fitnessFunction, popSize, nVar, c1, c2, bounds, inertia=1):
         r2 = np.random.uniform(0,1,(popSize, nVar))
         velocities = inertia*velocities + c1*r1*(bestPositions-positions)+c2*r2*(gbest-positions)
         positions += velocities
-        yield positions
         iteration+=1

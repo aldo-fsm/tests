@@ -6,7 +6,7 @@ import geneticAlgorithms as ga
 import numpy as np
 from matplotlib import pyplot as plt
 
-f = lambda x,y: x*np.sin(y)+y*np.sin(x)
+f = lambda x,y: x**2*np.sin(y)+y**2*np.sin(x)+x**2+y**2
 
 numBits = 8
 numPossibleValues = 2**numBits
