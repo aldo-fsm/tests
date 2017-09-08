@@ -30,9 +30,8 @@ def decode(chromossome):
 def update(i):
     txtIt.set_text('iteration: {}'.format(i))
     
-    popPSO = next(psoGen)
-    offsetsPSO = [p for p in popPSO]
-    sctPSO.set_offsets(list(zip(offsetsPSO)))
+    resultsPSO = next(psoGen)
+    sctPSO.set_offsets(resultsPSO['positions'])
     
     popGA = next(gaGen)
     offsetsGA = []
