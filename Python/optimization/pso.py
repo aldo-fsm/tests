@@ -80,3 +80,60 @@ def gbest(fitnessFunction, popSize, nVar, c1, c2, initBounds, inertia=1):
         velocities = inertia*velocities + c1*r1*(bestPositions-positions)+c2*r2*(gbest-positions)
         positions += velocities
         iteration+=1
+
+class Pso:
+    def __init__(self, fitness_function, num_var, c1, c2, inertia):
+        self.iteration = 0
+        self.fitness_function = fitness_function
+        self.num_var = num_var
+        self.inertia = inertia
+        self.c1 = c1
+        self.c2 = c2
+        self.population = []
+        self.swarms = []
+    def init_particles(self, num_particles, local_to_global_ratio, normal_mean=0, normal_sd=1):
+        swarm_size = round(num_particles*local_to_global_ratio)
+        self.swarms = [Swarm(swarm_size, self.num_var, normal_mean, normal_sd)
+                           for _ in range(int(np.floor(num_particles/swarm_size)))]
+        if swarm_size*len(self.swarms) < num_particles:
+            self.swarms.append(Swarm(num_particles%swarm_size, self.num_var, normal_mean, normal_sd))
+        self.population = np.concatenate([s.particles for s in self.swarms])
+    def optimize(self, iterations=1):
+        self.iteration += iterations
+        for _ in range(iterations):
+            # update pbest
+            for p in self.population:
+                p.update_pbest(self.fitness_function)
+            # update lbest
+            for s in self.swarms:
+                s.update_gbest()
+            # update velocity and position 
+            for s in self.swarms:
+                lbest = s.gbest[0].position
+                for p in s.particles:
+                    pbest = p.pbest[0]
+                    r1, r2 = np.random.rand(2, self.num_var)
+                    p.velocity = p.velocity*self.inertia + \
+                                 self.c1*r1*(pbest-p.position) + \
+                                 self.c2*r2*(lbest-p.position)
+                    p.position += p.velocity
+class Swarm:
+    def __init__(self, num_particles, num_var, normal_mean=0, normal_sd=1):
+        positions = np.random.normal(normal_mean, normal_sd, (num_particles, num_var))
+        velocities = np.random.normal(normal_mean, normal_sd, (num_particles, num_var))
+        self.particles = np.array([Particle(p, v) for p, v in zip(positions, velocities)])
+        self.gbest = (positions[0], -np.inf)
+    def update_gbest(self):
+        fitness = [p.fitness for p in self.particles]
+        bestIndex = np.argmax(fitness)
+        self.gbest = self.particles[bestIndex], fitness[bestIndex]
+class Particle:
+    def __init__(self, initial_position, initial_velocity):
+        self.position = initial_position
+        self.velocity = initial_velocity
+        self.fitness = -np.inf
+        self.pbest = (initial_position, -np.inf)
+    def update_pbest(self, fitness_function):
+        self.fitness = fitness_function(self.position)
+        if self.fitness > self.pbest[1]:
+            self.pbest = self.position, self.fitness
