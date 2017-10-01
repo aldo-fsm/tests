@@ -117,6 +117,10 @@ class Pso:
                                  self.c1*r1*(pbest-p.position) + \
                                  self.c2*r2*(lbest-p.position)
                     p.position += p.velocity
+    def gbest(self):
+        fitness = [p.fitness for p in self.population]
+        bestIndex = np.argmax(fitness)
+        return self.population[bestIndex].position, self.population[bestIndex].fitness
 class Swarm:
     def __init__(self, num_particles, num_var, normal_mean=0, normal_sd=1):
         positions = np.random.normal(normal_mean, normal_sd, (num_particles, num_var))
