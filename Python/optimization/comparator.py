@@ -23,8 +23,9 @@ class Comparator:
             a_data['time'].append(end_time - start_time)
 
     def execute(self, num_executions, num_iterations):
-        for _ in range(num_executions):
+        for i in range(num_executions):
             for a in self.algorithms:
                 a.reset()
             self.optimize(num_iterations)
+            print(str(100*(i+1)/num_executions)+' %')
             

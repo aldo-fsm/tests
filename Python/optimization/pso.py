@@ -92,12 +92,17 @@ class Pso:
         self.population = []
         self.swarms = []
     def init_particles(self, num_particles, local_to_global_ratio, normal_mean=0, normal_sd=1):
+        self.init_particles_args = num_particles, local_to_global_ratio, normal_mean, normal_sd
         swarm_size = round(num_particles*local_to_global_ratio)
         self.swarms = [Swarm(swarm_size, self.num_var, normal_mean, normal_sd)
                            for _ in range(int(np.floor(num_particles/swarm_size)))]
         if swarm_size*len(self.swarms) < num_particles:
             self.swarms.append(Swarm(num_particles%swarm_size, self.num_var, normal_mean, normal_sd))
         self.population = np.concatenate([s.particles for s in self.swarms])
+    def reset(self):
+        self.iteration = 0
+        self.init_particles(*self.init_particles_args)
+
     def optimize(self, iterations=1):
         self.iteration += iterations
         for _ in range(iterations):
@@ -116,11 +121,12 @@ class Pso:
                     p.velocity = p.velocity*self.inertia + \
                                  self.c1*r1*(pbest-p.position) + \
                                  self.c2*r2*(lbest-p.position)
-                    p.position += p.velocity
+                    p.position = p.position + p.velocity
+        self.solution, self.best_fitness = self.gbest()
     def gbest(self):
-        fitness = [p.fitness for p in self.population]
+        fitness = [p.pbest[1] for p in self.population]
         bestIndex = np.argmax(fitness)
-        return self.population[bestIndex].position, self.population[bestIndex].fitness
+        return self.population[bestIndex].pbest
 class Swarm:
     def __init__(self, num_particles, num_var, normal_mean=0, normal_sd=1):
         positions = np.random.normal(normal_mean, normal_sd, (num_particles, num_var))
