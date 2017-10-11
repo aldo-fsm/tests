@@ -1,48 +1,39 @@
 import time
 import numpy as np
+import os
 
 class Comparator:
     def __init__(self, fitness_functions, algorithms):
         self.algorithms = algorithms
         self.fitness_functions = fitness_functions
-        self.data = [{
-            a.name: {
-                'fitness': [], #best fitness in each iteration for each exectution
-                'solutions': [], #optimum point found in each execution
-                'time': [] #time spent in each execution
-            }
-            for a in self.algorithms
-        } for _ in fitness_functions]
-    def __optimize(self, num_iterations, ff_index):
-        fitness_function = self.fitness_functions[ff_index]
-        data = self.data[ff_index]
-        for a in self.algorithms:
-            a_data = data[a.name]
-            a_data['fitness'].append([])
-
-            start_time = time.time()
-            for _ in range(num_iterations):
-                a.optimize(fitness_function, 1)
-                a_data['fitness'][self.execution].append(a.best_fitness)
-            end_time = time.time()
-
-            a_data['solutions'].append(a.solution)
-            a_data['time'].append(end_time - start_time)
-
-    def __execute(self, ff_index, num_executions, num_iterations):
-        self.execution = 0
-        while self.execution < num_executions:
-            for a in self.algorithms:
-                a.reset()
-            self.__optimize(num_iterations, ff_index)
-            print(str(100*(self.execution+1)/num_executions)+' %')
-            self.execution += 1
-
-    def start(self, num_executions, num_iterations):
-        for ff_index in range(len(self.fitness_functions)):
-            print('============ Fitness function {}/{} ============'
-                  .format(ff_index+1, len(self.fitness_functions)))
-            self.__execute(ff_index, num_executions, num_iterations)
+    def run(self, num_executions, num_iterations, output_path=''):
+        root_directory_name = '{}_{}x{}/'.format(time.time(), num_executions, num_iterations)
+        root_directory = output_path + root_directory_name
+        os.mkdir(root_directory)
+        for algorithm in self.algorithms:
+            algorithm_directory = root_directory + algorithm.name + '/'
+            os.mkdir(algorithm_directory)
+            for fitness_function in self.fitness_functions:
+                file_path = algorithm_directory+'results_'+fitness_function.name + '.csv'
+                best_fitness = []
+                times = []
+                solutions = []
+                for execution in range(num_executions):
+                    best_fitness.append([])
+                    start_time = time.time()
+                    for _ in range(num_iterations):
+                        algorithm.optimize(fitness_function, 1)
+                        best_fitness[execution].append(algorithm.best_fitness)
+                    end_time = time.time()
+                    times.append(end_time-start_time)
+                    solutions.append(algorithm.solution)
+                with open(file_path, mode='a') as f:
+                    for line in best_fitness:
+                        for fitness in line:
+                            f.write(str(fitness)+',')
+                        f.write('\n')
+                    for t, s in zip(times, solutions):
+                        f.write('{},{}\n'.format(t, s))
 
 class OptmizationAlgorithm:
     def __init__(self, name):
@@ -53,4 +44,3 @@ class OptmizationAlgorithm:
         raise NotImplementedError()
     def optimize(self, fitness_function, num_iterations):
         raise NotImplementedError()
-    
